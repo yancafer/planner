@@ -1,6 +1,15 @@
+// page.tsx
 "use client";
 import React, { useState } from "react";
 import jsPDF from "jspdf";
+import {
+  eixoOptions,
+  programaOptions,
+  objetivoOptions,
+  regionalizacaoOptions,
+  indicadorOptions,
+  metaOptions,
+} from "./data";
 
 const FormPPA = () => {
   const [eixo, setEixo] = useState("");
@@ -9,95 +18,6 @@ const FormPPA = () => {
   const [regionalizacao, setRegionalizacao] = useState("");
   const [indicador, setIndicador] = useState("");
   const [meta, setMeta] = useState("");
-
-  // Dados estáticos
-  const eixoOptions = [
-    "Gestão Institucional e Governança",
-    "Desenvolvimento Social e Segurança Pública",
-    "Infraestrutura",
-  ];
-
-  const programaOptions: { [key: string]: string[] } = {
-    "Gestão Institucional e Governança": [
-      "Valorização, capacitação e cuidado dos servidores públicos",
-    ],
-    "Desenvolvimento Social e Segurança Pública": [
-      "Segurança pública e Proteção à Vida",
-      "Integração da Comunidade e Segurança Pública",
-    ],
-    Infraestrutura: [
-      "Programa, reforma, ampliação dos prédios públicos estaduais",
-    ],
-  };
-
-  const objetivoOptions: { [key: string]: string[] } = {
-    "Valorização, capacitação e cuidado dos servidores públicos": [
-      "Valorização e Capacitação dos Servidores de Segurança Pública - SEJUSP",
-    ],
-    "Segurança pública e Proteção à Vida": [
-      "Fortalecimento das Ações de Integração entre as Forças do SISP - SEJUSP",
-      "Melhoria, Modernização e Inovação dos Serviços Integrados da Segurança Pública - SEJUSP",
-    ],
-    "Integração da Comunidade e Segurança Pública": [
-      "Fomento de Ações de Prevenção à Criminalidade para Jovens em Situação de Vulnerabilidade Social - Acre pela Vida",
-      "Redução da Reincidência Criminal",
-      "Policiamento Comunitário Integrado em Áreas e Parques Urbanos",
-    ],
-    "Programa, reforma, ampliação dos prédios públicos estaduais": [
-      "Construção, Reforma e Ampliação dos Prédios da SEJUSP",
-    ],
-  };
-
-  const regionalizacaoOptions = [
-    "Alto Acre",
-    "Baixo Acre",
-    "Juruá",
-    "Purus",
-    "Tarauacá - Envira",
-  ];
-
-  const indicadorOptions: { [key: string]: string[] } = {
-    "Valorização, capacitação e cuidado dos servidores públicos": [
-      "Percentual de profissionais valorizados e qualificados",
-    ],
-    "Segurança pública e Proteção à Vida": [
-      "Número de mortes violentas intencionais",
-      "Número de ações implementadas",
-    ],
-    "Integração da Comunidade e Segurança Pública": [
-      "Número de jovens atendidos",
-      "Percentual de redução na reincidência",
-      "Posicionamento da Segurança Pública do Acre no ranking de competitividade do CLP",
-    ],
-    "Programa, reforma, ampliação dos prédios públicos estaduais": [
-      "Número de prédios da SEJUSP construídos, reformados ou ampliados",
-    ],
-  };
-
-  const metaOptions: { [key: string]: string[] } = {
-    "Percentual de profissionais valorizados e qualificados": [
-      "50%",
-      "60%",
-      "70%",
-      "80%",
-    ],
-    "Número de mortes violentas intencionais": ["186", "180", "175", "170"],
-    "Número de ações implementadas": ["12", "18", "23", "28"],
-    "Número de jovens atendidos": ["1800", "2600", "3700", "4500"],
-    "Percentual de redução na reincidência": ["55%", "50%", "45%", "40%"],
-    "Posicionamento da Segurança Pública do Acre no ranking de competitividade do CLP": [
-      "7º",
-      "6º",
-      "6º",
-      "6º",
-    ],
-    "Número de prédios da SEJUSP construídos, reformados ou ampliados": [
-      "20",
-      "17",
-      "17",
-      "24",
-    ],
-  };
 
   // Funções para atualizar os valores
   const handleEixoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -135,7 +55,7 @@ const FormPPA = () => {
 
     // Título principal
     doc.setTextColor(40, 40, 99); // Azul escuro
-    doc.text("FICHA DE ADERÊNCIA", 105, 20, { align: "center" });
+    doc.text("FICHA DE ADERÊNCIA LEGAL", 105, 20, { align: "center" });
 
     // Subtítulo decorativo abaixo do título
     doc.setLineWidth(0.5);
@@ -158,8 +78,8 @@ const FormPPA = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(50, 50, 50);
-    doc.text(eixoText, 10, y + 8);
-    y += eixoText.length * 8 + 8;
+    doc.text(eixoText, 10, y + 6);
+    y += eixoText.length * 8 + 4;
 
     // Adicionar linha decorativa acima do subtítulo
     doc.setDrawColor(40, 40, 99); // Azul escuro
@@ -195,19 +115,23 @@ const FormPPA = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
+
+        // Rótulo
+        const labelWidth = doc.getTextWidth(`${item.label}:`); // Largura do rótulo
         doc.text(`${item.label}:`, 10, y);
 
-        // Estilo para valores
-        const text = doc.splitTextToSize(item.value, 150); // Ajustando largura
+        // Valor ao lado do rótulo
+        const text = doc.splitTextToSize(item.value, 150); // Ajustando largura do valor
         doc.setFont("helvetica", "normal");
         doc.setFontSize(11);
         doc.setTextColor(50, 50, 50);
-        doc.text(text, 55, y); // Valor começando na posição 100 (lado direito)
+        doc.text(text, 10 + labelWidth + 5, y); // Alinha o texto após o rótulo, com espaçamento
 
-        y += Math.max(text.length * 8 + 8, 12); // Ajuste da altura
-
+        // Atualizar a posição Y para manter espaçamento entre linhas
+        y += Math.max(text.length * 8, 12); // Altura mínima por linha ou altura do texto
       }
     });
+
 
     // Linha decorativa no rodapé
     doc.setDrawColor(200, 200, 200); // Cinza claro
