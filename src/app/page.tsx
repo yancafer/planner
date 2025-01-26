@@ -1,7 +1,8 @@
-// page.tsx
 "use client";
+
 import React, { useState } from "react";
 import jsPDF from "jspdf";
+import styles from "./Form.module.css";
 import {
   eixoOptions,
   programaOptions,
@@ -9,41 +10,39 @@ import {
   regionalizacaoOptions,
   indicadorOptions,
   metaOptions,
+  unidadeGestoraOptions,
+  codigoProjetoOptions,
+  fonteRecursosOptions,
+  elementoDespesaOptions,
+  tipoItemOptions,
 } from "./data";
 
 const FormPPA = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Step 1: PPA
   const [eixo, setEixo] = useState("");
   const [programa, setPrograma] = useState("");
   const [objetivo, setObjetivo] = useState("");
   const [regionalizacao, setRegionalizacao] = useState("");
   const [indicador, setIndicador] = useState("");
   const [meta, setMeta] = useState("");
+  const [notaTecnica, setNotaTecnica] = useState("");
 
-  // Funções para atualizar os valores
-  const handleEixoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setEixo(e.target.value);
-    setPrograma("");
-    setObjetivo("");
-    setIndicador("");
-    setMeta("");
+  // Step 2: Unidade Orçamentária e PCA
+  const [unidadeGestora, setUnidadeGestora] = useState<keyof typeof codigoProjetoOptions>("001");
+  const [codigoProjeto, setCodigoProjeto] = useState("");
+  const [fonteRecursos, setFonteRecursos] = useState("");
+  const [elementoDespesa, setElementoDespesa] = useState("");
+  const [valorAquisicao, setValorAquisicao] = useState("");
+  const [tipoItem, setTipoItem] = useState("");
+
+  const handleNext = () => {
+    if (currentStep < 2) setCurrentStep(currentStep + 1);
   };
 
-  const handleProgramaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPrograma(e.target.value);
-    setObjetivo("");
-    setIndicador("");
-    setMeta("");
-  };
-
-  const handleObjetivoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setObjetivo(e.target.value);
-    setIndicador("");
-    setMeta("");
-  };
-
-  const handleIndicadorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setIndicador(e.target.value);
-    setMeta("");
+  const handlePrev = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const generatePDF = () => {
@@ -51,125 +50,130 @@ const FormPPA = () => {
 
     // Configurações globais
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
+    doc.setFontSize(17);
+    doc.setTextColor(40, 40, 99);
 
     // Título principal
-    doc.setTextColor(40, 40, 99); // Azul escuro
     doc.text("FICHA DE ADERÊNCIA LEGAL", 105, 20, { align: "center" });
 
-    // Subtítulo decorativo abaixo do título
+    // Linha decorativa
     doc.setLineWidth(0.5);
     doc.setDrawColor(40, 40, 99);
     doc.line(10, 25, 200, 25);
 
-    // Dados principais
     let y = 35; // Posição inicial do conteúdo
-    const eixoTitle = "Eixo Estruturante";
-    const eixoValue = eixo || "Não definido";
 
-    // Exibir "Eixo Estruturante"
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${eixoTitle}:`, 10, y);
-
-    // Exibir valor do Eixo Estruturante
-    const eixoText = doc.splitTextToSize(eixoValue, 190);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(50, 50, 50);
-    doc.text(eixoText, 10, y + 6);
-    y += eixoText.length * 8 + 4;
-
-    // Adicionar linha decorativa acima do subtítulo
-    doc.setDrawColor(40, 40, 99); // Azul escuro
-    doc.setLineWidth(0.5);
-    doc.line(10, y, 200, y);
-    y += 10; // Pequeno espaçamento entre a linha e o texto
-
-    // Adicionar o subtítulo "AÇÃO DO PROGRAMA"
+    // Título "AÇÃO DO PROGRAMA"
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.setTextColor(40, 40, 99); // Azul escuro
+    doc.setTextColor(40, 40, 99);
     doc.text("AÇÃO DO PROGRAMA", 105, y, { align: "center" });
-    y += 5; // Pequeno espaçamento entre o subtítulo e o texto
+    y += 13;
 
-    // Adicionar linha decorativa acima do subtítulo
-    doc.setDrawColor(40, 40, 99); // Azul escuro
-    doc.setLineWidth(0.5);
-    doc.line(10, y, 200, y);
-    y += 10; // Pequeno espaçamento entre a linha e o texto
-
-    // Renderizar os outros dados
-    const data = [
+    // Renderizar os dados do Step 1
+    const step1Data = [
+      { label: "Eixo Estruturante", value: eixo },
       { label: "Programa", value: programa },
       { label: "Objetivo Específico", value: objetivo },
       { label: "Regionalização", value: regionalizacao },
       { label: "Indicador", value: indicador },
       { label: "Meta por Ano", value: meta },
+      { label: "Nota Técnica", value: notaTecnica },
     ];
 
-    data.forEach((item) => {
+    step1Data.forEach((item) => {
       if (item.value) {
-        // Estilo para rótulos e valores lado a lado
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
         doc.setTextColor(0, 0, 0);
-
-        // Rótulo
-        const labelWidth = doc.getTextWidth(`${item.label}:`); // Largura do rótulo
         doc.text(`${item.label}:`, 10, y);
 
-        // Valor ao lado do rótulo
-        const text = doc.splitTextToSize(item.value, 150); // Ajustando largura do valor
         doc.setFont("helvetica", "normal");
         doc.setFontSize(11);
         doc.setTextColor(50, 50, 50);
-        doc.text(text, 10 + labelWidth + 5, y); // Alinha o texto após o rótulo, com espaçamento
-
-        // Atualizar a posição Y para manter espaçamento entre linhas
-        y += Math.max(text.length * 8, 12); // Altura mínima por linha ou altura do texto
+        const text = doc.splitTextToSize(item.value, 160);
+        doc.text(text, 50, y);
+        y += text.length * 8 + 5;
       }
     });
 
+    y += 10; // Espaço antes do próximo título
+
+    // Título "UNIDADE ORÇAMENTÁRIA E PCA"
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 99);
+    doc.text("UNIDADE ORÇAMENTÁRIA E PCA", 105, y, { align: "center" });
+    y += 13;
+
+    // Renderizar os dados do Step 2
+    const step2Data = [
+      { label: "Unidade Gestora", value: unidadeGestora },
+      { label: "Código Projeto/Atividade", value: codigoProjeto },
+      { label: "Fonte de Recursos", value: fonteRecursos },
+      { label: "Elemento de Despesa", value: elementoDespesa },
+      { label: "Valor de Aquisição", value: valorAquisicao },
+      { label: "Tipo de Item", value: tipoItem },
+    ];
+
+    step2Data.forEach((item) => {
+      if (item.value) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${item.label}:`, 10, y);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(50, 50, 50);
+        const text = doc.splitTextToSize(item.value, 160);
+        doc.text(text, 50, y);
+        y += text.length * 8 + 5;
+      }
+    });
 
     // Linha decorativa no rodapé
-    doc.setDrawColor(200, 200, 200); // Cinza claro
+    doc.setDrawColor(200, 200, 200);
     doc.line(10, 270, 200, 270);
 
-    // Rodapé
     doc.setFont("helvetica", "italic");
     doc.setFontSize(10);
-    doc.setTextColor(120, 120, 120); // Cinza
+    doc.setTextColor(120, 120, 120);
     doc.text(
-      "Documento gerado automaticamente pelo sistema - DIRJUSP/SEJUSP",
+      "Documento gerado automaticamente pelo sistema - PLANNER/DIRJUSP/SEJUSP",
       105,
       280,
       { align: "center" }
     );
 
-    // Salvar PDF
     doc.save("PPA_2023_2027.pdf");
   };
 
-  return (
-    <div>
-      <h1>PPA 2023 - 2027</h1>
-
-      <label>Eixo Estruturante:</label>
-      <select value={eixo} onChange={handleEixoChange}>
-        <option value="">Selecione</option>
-        {eixoOptions.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-
-      {eixo && (
+  const renderStepContent = () => {
+    if (currentStep === 1) {
+      return (
         <>
-          <label>Programa:</label>
-          <select value={programa} onChange={handleProgramaChange}>
+          <h2 className={styles.subtitle}>FICHA DE ADERÊNCIA LEGAL</h2>
+          <label className={styles.label}>Eixo Estruturante:</label>
+          <select
+            className={styles.select}
+            value={eixo}
+            onChange={(e) => setEixo(e.target.value)}
+          >
+            <option value="">Selecione</option>
+            {eixoOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+
+          <label className={styles.label}>Programa:</label>
+          <select
+            className={styles.select}
+            value={programa}
+            onChange={(e) => setPrograma(e.target.value)}
+          >
             <option value="">Selecione</option>
             {programaOptions[eixo]?.map((opt) => (
               <option key={opt} value={opt}>
@@ -177,13 +181,13 @@ const FormPPA = () => {
               </option>
             ))}
           </select>
-        </>
-      )}
 
-      {programa && (
-        <>
-          <label>Objetivo Específico:</label>
-          <select value={objetivo} onChange={handleObjetivoChange}>
+          <label className={styles.label}>Objetivo Específico:</label>
+          <select
+            className={styles.select}
+            value={objetivo}
+            onChange={(e) => setObjetivo(e.target.value)}
+          >
             <option value="">Selecione</option>
             {objetivoOptions[programa]?.map((opt) => (
               <option key={opt} value={opt}>
@@ -191,13 +195,10 @@ const FormPPA = () => {
               </option>
             ))}
           </select>
-        </>
-      )}
 
-      {objetivo && (
-        <>
-          <label>Regionalização:</label>
+          <label className={styles.label}>Regionalização:</label>
           <select
+            className={styles.select}
             value={regionalizacao}
             onChange={(e) => setRegionalizacao(e.target.value)}
           >
@@ -208,13 +209,13 @@ const FormPPA = () => {
               </option>
             ))}
           </select>
-        </>
-      )}
 
-      {regionalizacao && (
-        <>
-          <label>Indicador:</label>
-          <select value={indicador} onChange={handleIndicadorChange}>
+          <label className={styles.label}>Indicador:</label>
+          <select
+            className={styles.select}
+            value={indicador}
+            onChange={(e) => setIndicador(e.target.value)}
+          >
             <option value="">Selecione</option>
             {indicadorOptions[programa]?.map((opt) => (
               <option key={opt} value={opt}>
@@ -222,13 +223,13 @@ const FormPPA = () => {
               </option>
             ))}
           </select>
-        </>
-      )}
 
-      {indicador && (
-        <>
-          <label>Meta por Ano:</label>
-          <select value={meta} onChange={(e) => setMeta(e.target.value)}>
+          <label className={styles.label}>Meta por Ano:</label>
+          <select
+            className={styles.select}
+            value={meta}
+            onChange={(e) => setMeta(e.target.value)}
+          >
             <option value="">Selecione</option>
             {metaOptions[indicador]?.map((opt, index) => (
               <option key={index} value={opt}>
@@ -236,10 +237,122 @@ const FormPPA = () => {
               </option>
             ))}
           </select>
-        </>
-      )}
 
-      <button onClick={generatePDF}>Gerar PDF</button>
+          <label className={styles.label}>Nota Técnica:</label>
+          <textarea
+            className={styles.textarea}
+            value={notaTecnica}
+            onChange={(e) => setNotaTecnica(e.target.value)}
+            placeholder="Digite a nota técnica aqui..."
+          />
+        </>
+      );
+    } else if (currentStep === 2) {
+      return (
+        <>
+          <h2 className={styles.subtitle}>UNIDADE ORÇAMENTÁRIA E PCA</h2>
+          <label className={styles.label}>Unidade Gestora:</label>
+          <select
+            className={styles.select}
+            value={unidadeGestora}
+            onChange={(e) => setUnidadeGestora(e.target.value as keyof typeof codigoProjetoOptions)}
+          >
+            <option value="">Selecione</option>
+            {unidadeGestoraOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+
+          <label className={styles.label}>Código Projeto/Atividade:</label>
+          <select
+            className={styles.select}
+            value={codigoProjeto}
+            onChange={(e) => setCodigoProjeto(e.target.value)}
+          >
+            <option value="">Selecione</option>
+            {codigoProjetoOptions[unidadeGestora]?.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+
+          <label className={styles.label}>Fonte de Recursos:</label>
+          <select
+            className={styles.select}
+            value={fonteRecursos}
+            onChange={(e) => setFonteRecursos(e.target.value)}
+          >
+            <option value="">Selecione</option>
+            {fonteRecursosOptions[unidadeGestora]?.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+
+          <label className={styles.label}>Elemento de Despesa:</label>
+          <select
+            className={styles.select}
+            value={elementoDespesa}
+            onChange={(e) => setElementoDespesa(e.target.value)}
+          >
+            <option value="">Selecione</option>
+            {elementoDespesaOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+
+          <label className={styles.label}>Valor de Aquisição:</label>
+          <input
+            type="number"
+            className={styles.input}
+            value={valorAquisicao}
+            onChange={(e) => setValorAquisicao(e.target.value)}
+          />
+
+          <label className={styles.label}>Tipo de Item:</label>
+          <select
+            className={styles.select}
+            value={tipoItem}
+            onChange={(e) => setTipoItem(e.target.value)}
+          >
+            <option value="">Selecione</option>
+            {tipoItemOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </>
+      );
+    }
+  };
+
+  return (
+    <div className={styles.container}>
+      {renderStepContent()}
+      <div className={styles.buttonGroup}>
+        {currentStep > 1 && (
+          <button className={styles.button} onClick={handlePrev}>
+            Voltar
+          </button>
+        )}
+        {currentStep < 2 && (
+          <button className={styles.button} onClick={handleNext}>
+            Continuar
+          </button>
+        )}
+        {currentStep === 2 && (
+          <button className={styles.button} onClick={generatePDF}>
+            Gerar PDF
+          </button>
+        )}
+      </div>
     </div>
   );
 };
